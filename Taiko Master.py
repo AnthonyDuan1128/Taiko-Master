@@ -8,7 +8,7 @@ import tkinter.messagebox as mg
 from PIL import Image
 import time
 
-def select_region():#说明
+def select_region():#说明6
     print('不要关闭该运行窗口，否则将无法运行')
     mg.showinfo("说明","下面即将弹出选择窗口，请按下并滑动鼠标选择侦测区域。")
     root = tk.Tk()
