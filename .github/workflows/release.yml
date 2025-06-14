@@ -1,18 +1,18 @@
 name: Build & Release Taiko-Master
 
-# 既监听符合 vX.Y.Z 的 tag 推送，也支持手动触发
+# 权限配置，确保 GITHUB_TOKEN 有权限发布 release
+permissions:
+  contents: write
+
+# 触发条件：推送 tag 或手动运行
 on:
   push:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-and-release:
-    # Windows 环境以生成 .exe
     runs-on: windows-latest
 
     steps:
@@ -20,42 +20,41 @@ jobs:
       - name: Checkout 源码
         uses: actions/checkout@v3
 
-      # 2. 安装 Python（示例用 Python+PyInstaller 打包）
-      - name: 设置 Python
+      # 2. 安装 Python
+      - name: 设置 Python 环境
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. 安装依赖并安装 PyInstaller
+      # 3. 安装依赖
       - name: 安装依赖
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. 调用 PyInstaller 打包成单文件 EXE
-      - name: 用 PyInstaller 打包 EXE
+      # 4. 使用 PyInstaller 打包 .exe
+      - name: 打包 EXE
         run: |
           pyinstaller --onefile "Taiko Master.py"
-        # 输出：dist/Taiko Master.exe
 
-      # 5. 创建（或更新）GitHub Release
+      # 5. 创建 Release
       - name: 创建 Release
         id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref_name || 'v0.0.0-manual' }}
           release_name: Release ${{ github.ref_name || github.run_number }}
-          draft: false       # 直接发布，不做草稿
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 6. 上传 EXE 到刚创建的 Release
+      # 6. 上传 EXE 到 Release
       - name: 上传 EXE 到 Release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/"Taiko Master.exe"
+          asset_path: "./dist/Taiko Master.exe"
           asset_name: Taiko-Master-${{ github.ref_name || github.run_number }}.exe
           asset_content_type: application/octet-stream
