@@ -1,9 +1,7 @@
 name: Build & Release Taiko-Master
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
