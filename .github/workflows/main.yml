@@ -14,45 +14,51 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. 拉取仓库代码
       - name: Checkout 源码
         uses: actions/checkout@v3
 
-      # 2. 安装 Python
       - name: 设置 Python 环境
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. 安装依赖
       - name: 安装依赖
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. 使用 PyInstaller 打包 .exe
       - name: 打包 EXE
         run: |
           pyinstaller --onefile "Taiko Master.py"
 
-      # 5. 创建 Release
+      - name: 生成随机 tag
+        id: tag
+        run: |
+          echo "TAG_NAME=release-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+
+      - name: 创建 Tag 到远程
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag ${{ env.TAG_NAME }}
+          git push origin ${{ env.TAG_NAME }}
+
       - name: 创建 Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref_name || 'v0.0.0-manual' }}
-          release_name: Release ${{ github.ref_name || github.run_number }}
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 6. 上传 EXE 到 Release
       - name: 上传 EXE 到 Release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "./dist/Taiko Master.exe"
-          asset_name: Taiko-Master-${{ github.ref_name || github.run_number }}.exe
+          asset_name: Taiko-Master-${{ env.TAG_NAME }}.exe
           asset_content_type: application/octet-stream
