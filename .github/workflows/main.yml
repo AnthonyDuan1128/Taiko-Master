@@ -3,6 +3,9 @@ name: Build & Release Taiko-Master
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
     # Windows 环境以生成 .exe
